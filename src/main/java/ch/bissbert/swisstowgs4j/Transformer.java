@@ -11,9 +11,9 @@ public class Transformer {
      * @param height height in LV95
      * @return an array containing the estimate in the lv95 system
      * <p>
-     * [0] = longitude, [1] = latitude, [2] = height
+     * [0] = longitude, [1] = latitude, [2] = height(null if nothing passed)
      */
-    public static Double[] lv95ToWGS84(Double east, Double north, Double height) {
+    public static Double[] lv95ToWGS84(double east, double north, Double height) {
         double y = (east - 2600000) / 1000000;
         double x = (north - 1200000) / 1000000;
 
@@ -51,9 +51,9 @@ public class Transformer {
      * @param height    height in WGS84
      * @return an array containing the estimate in LV95
      * <p>
-     * [0] = east, [1] = north, [2] = height
+     * [0] = east, [1] = north, [2] = height(null if nothing passed)
      */
-    public static Double[] wgs84ToLV95(Double longitude, Double latitude, Double height) {
+    public static Double[] wgs84ToLV95(double longitude, double latitude, Double height) {
 
         Double[] data = new Double[3];
 
@@ -82,5 +82,17 @@ public class Transformer {
         }
 
         return data;
+    }
+
+    public static Double[] lv95ToLV03(double east, double north, Double height) {
+        double newEast = east - 2000000.000;
+        double newNorth = north - 1000000.000;
+        return new Double[]{newEast, newNorth, height};
+    }
+
+    public static Double[] lv03ToLV95(double east, double north, Double height) {
+        double newEast = east + 2_000_000;
+        double newNorth = north + 1_000_000;
+        return new Double[]{newEast, newNorth, height};
     }
 }

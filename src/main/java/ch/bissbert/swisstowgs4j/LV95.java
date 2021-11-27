@@ -1,6 +1,6 @@
 package ch.bissbert.swisstowgs4j;
 
-public class LV95 {
+public class LV95 implements Coordinate {
 
     private final Double east;
     private final Double north;
@@ -29,11 +29,26 @@ public class LV95 {
         return height;
     }
 
-    public WGS84 toLV95(){
+    @Override
+    public WGS84 toWGS84() {
         Double[] wgs84data = Transformer.lv95ToWGS84(east, north, height);
-        if (wgs84data[2] == null){
+        if (wgs84data[2] == null) {
             return new WGS84(wgs84data[0], wgs84data[1]);
         }
         return new WGS84(wgs84data[0], wgs84data[1], wgs84data[2]);
+    }
+
+    @Override
+    public LV03 toLV03() {
+        Double[] lv03data = Transformer.lv95ToLV03(east, north, height);
+        if (lv03data[2] == null) {
+            return new LV03(lv03data[0], lv03data[1]);
+        }
+        return new LV03(lv03data[0], lv03data[1], lv03data[2]);
+    }
+
+    @Override
+    public LV95 toLV95() {
+        return this;
     }
 }
