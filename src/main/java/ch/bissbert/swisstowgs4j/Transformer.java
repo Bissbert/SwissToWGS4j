@@ -84,12 +84,32 @@ public class Transformer {
         return data;
     }
 
+    /**
+     * creates the LV03 coordinates from the given LV95
+     *
+     * @param east   east in LV95
+     * @param north  north in LV95
+     * @param height height in LV95
+     * @return an array containing the estimate in LV03
+     * <p>
+     * [0] = east, [1] = north, [2] = height(null if nothing passed)
+     */
     public static Double[] lv95ToLV03(double east, double north, Double height) {
         double newEast = east - 2000000.000;
         double newNorth = north - 1000000.000;
         return new Double[]{newEast, newNorth, height};
     }
 
+    /**
+     * creates the LV95 coordinates from the given LV03
+     *
+     * @param east   east in LV03
+     * @param north  north in LV03
+     * @param height height in LV03
+     * @return an array containing the estimate in LV95
+     * <p>
+     * [0] = east, [1] = north, [2] = height(null if nothing passed)
+     */
     public static Double[] lv03ToLV95(double east, double north, Double height) {
         double newEast = east + 2_000_000;
         double newNorth = north + 1_000_000;

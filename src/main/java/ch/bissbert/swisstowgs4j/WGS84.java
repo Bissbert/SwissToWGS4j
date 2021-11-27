@@ -1,5 +1,11 @@
 package ch.bissbert.swisstowgs4j;
 
+/**
+ * Coordinate in the WGS84 system
+ *
+ * @author Bissbert
+ * @version 1.0
+ */
 public class WGS84 implements Coordinate{
     private final Double longitude;
     private final Double latitude;

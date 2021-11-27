@@ -1,5 +1,11 @@
 package ch.bissbert.swisstowgs4j;
 
+/**
+ * Coordinate in the LV03 system
+ *
+ * @author Bissbert
+ * @version 1.0
+ */
 public class LV03 implements Coordinate {
     private final double north;
     private final double east;

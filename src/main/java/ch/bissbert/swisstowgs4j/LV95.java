@@ -1,5 +1,11 @@
 package ch.bissbert.swisstowgs4j;
 
+/**
+ * Coordinate in the LV95 system
+ *
+ * @author Bissbert
+ * @version 1.0
+ */
 public class LV95 implements Coordinate {
 
     private final Double east;
