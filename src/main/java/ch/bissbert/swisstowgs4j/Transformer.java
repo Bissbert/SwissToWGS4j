@@ -57,8 +57,8 @@ public class Transformer {
 
         Double[] data = new Double[3];
 
-        double x = (longitude - 169028.66) / 10000;
-        double y = (latitude - 26782.5) / 10000;
+        double x = (latitude * 3600 - 169028.66) / 10000;
+        double y = (longitude * 3600 - 26782.5) / 10000;
 
         //east
         data[0] = 2600072.37d
