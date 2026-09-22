@@ -46,8 +46,8 @@ public class Transformer {
     /**
      * creates the LV95 coordinates from the WGS84 data
      *
-     * @param longitude longitude in WGS84
-     * @param latitude  latitude in WGS84
+     * @param longitude longitude in WGS84 decimal degrees
+     * @param latitude  latitude in WGS84 decimal degrees
      * @param height    height in WGS84
      * @return an array containing the estimate in LV95
      * <p>
