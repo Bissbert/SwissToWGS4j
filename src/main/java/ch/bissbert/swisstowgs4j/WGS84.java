@@ -37,7 +37,7 @@ public class WGS84 implements Coordinate{
     @Override
     public LV95 toLV95() {
         Double[] lv95Data = Transformer.wgs84ToLV95(longitude, latitude, height);
-        if (lv95Data[3] == null) {
+        if (lv95Data[2] == null) {
             return new LV95(lv95Data[0], lv95Data[1]);
         }
         return new LV95(lv95Data[0], lv95Data[1], lv95Data[2]);
