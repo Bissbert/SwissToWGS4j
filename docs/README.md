@@ -9,7 +9,7 @@ in `tools/` because this repository had no existing measurement-tool tree.
 |---|---|---|
 | 1 | [Coordinate model](coordinate-model.md) | Three coordinate value types share one<br/>conversion interface. |
 | 2 | [Transformer](transformer.md) | LV03/LV95 use an offset; LV95/WGS84 use<br/>polynomial approximations. |
-| 3 | [Bugs found](BUGS-FOUND.md) | Verified defects and unapplied diffs for<br/>the source maintainers. |
+| 3 | [Bugs found](BUGS-FOUND.md) | Verified defects, since fixed on the<br/>default branch, with their diffs. |
 | — | [Measurement](measurement.md) | Commands, inputs, outputs, and accuracy caveats. |
 
 ```mermaid
