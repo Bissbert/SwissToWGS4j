@@ -1,0 +1,177 @@
+# SwissToWGS4j
+
+SwissToWGS4j is a small Java library for converting between the Swiss national
+grid LV03 (CH1903), the newer LV95 (CH1903+), and geographic WGS84 longitude,
+latitude coordinates. It exposes the three coordinate types through one
+`Coordinate` interface and keeps the transformation formulas in `Transformer`.
+The LV03/LV95 relationship is a fixed offset; the LV95/WGS84 relationship is a
+projection approximation.
+
+```mermaid
+flowchart LR
+    A["LV03 / CH1903<br/>east, north in metres"]
+    B["LV95 / CH1903+<br/>east, north in metres"]
+    C["WGS84<br/>longitude, latitude in decimal degrees"]
+
+    A -->|"+2,000,000 east<br/>+1,000,000 north"| B
+    B -->|"forward polynomial<br/>approximation"| C
+    C -.->|"inverse static formula<br/>object path currently fails"| B
+    B -->|"−2,000,000 east<br/>−1,000,000 north"| A
+
+    style A fill:#9e6a03,stroke:#d29922,color:#fff
+    style B fill:#238636,stroke:#3fb950,color:#fff
+    style C fill:#8250df,stroke:#bc8cff,color:#fff
+```
+
+## Quick start
+
+The project targets Java `11` and builds with Maven. Because the `pom.xml` does
+not configure a remote artifact repository, install the library locally first:
+
+```sh
+mvn -q -Dgpg.skip=true install
+```
+
+The command above was run successfully for this documentation pass. A consumer
+project can then declare the coordinates from this repository:
+
+```xml
+<dependency>
+  <groupId>ch.bissbert</groupId>
+  <artifactId>SwissToWGS4j</artifactId>
+  <version>1.0</version>
+</dependency>
+```
+
+The working direction is an object conversion:
+
+```java
+import ch.bissbert.swisstowgs4j.LV95;
+import ch.bissbert.swisstowgs4j.WGS84;
+
+LV95 swiss = new LV95(2_600_000.0, 1_200_000.0);
+WGS84 geographic = swiss.toWGS84();
+System.out.printf("lon=%.9f lat=%.9f%n",
+        geographic.getLongitude(), geographic.getLatitude());
+```
+
+Verified output:
+
+```text
+lon=7.438637222 lat=46.951081111
+```
+
+The inverse object conversion is currently broken and is documented below. The
+static method can be exercised with the input convention its current formula
+actually uses: latitude arcseconds first, longitude arcseconds second.
+
+```java
+import ch.bissbert.swisstowgs4j.Transformer;
+
+Double[] lv95 = Transformer.wgs84ToLV95(
+        46.951082 * 3600.0,
+        7.438632 * 3600.0,
+        null);
+System.out.printf("east=%.4f north=%.4f%n", lv95[0], lv95[1]);
+```
+
+Verified output from the current static implementation:
+
+```text
+east=2599999.9488 north=1199999.9296
+```
+
+Calling `new WGS84(7.438632, 46.951082).toLV95()` instead throws
+`ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3`. This is
+not hidden or repaired in the documentation pass; see [Bugs found](docs/BUGS-FOUND.md).
+
+## Architecture
+
+Coordinate objects provide the public dispatch surface. They delegate the
+actual arithmetic to `Transformer`; the chained paths go through LV95 where
+needed.
+
+```mermaid
+flowchart TD
+    I["Coordinate interface"] --> L3["LV03"]
+    I --> L9["LV95"]
+    I --> W["WGS84"]
+    L3 --> T["Transformer"]
+    L9 --> T
+    W --> T
+    T --> O["new coordinate object"]
+    W -->|"toLV03 delegates through toLV95"| L9
+    L3 -->|"toWGS84 delegates through toLV95"| L9
+
+    style I fill:#1f6feb,stroke:#58a6ff,color:#fff
+    style T fill:#238636,stroke:#3fb950,color:#fff
+    style O fill:#8250df,stroke:#bc8cff,color:#fff
+```
+
+## Capability table
+
+| Starting type | Same type | LV03 | LV95 | WGS84 |
+|---|---|---|---|---|
+| `LV03` | returns itself | — | fixed offset | offset, then forward polynomial |
+| `LV95` | returns itself | fixed offset | — | forward polynomial |
+| `WGS84` | returns itself | currently throws via `toLV95()` | currently throws | — |
+| `Transformer` | — | static offset methods | static offset and<br/>inverse methods | static polynomial methods |
+
+Heights are optional. The LV03/LV95 offset preserves a non-null height. The
+LV95/WGS84 methods apply the vertical terms in their formulas. No validation of
+coordinate ranges is performed.
+
+## Measured results
+
+The figures below come from `python3 tools/measure.py`, which compiles the
+current source with `javac -Xlint:all` and runs `tools/Probe.java`.
+
+| Check | Result |
+|---|---:|
+| Compiler warnings | 0 |
+| LV03/LV95 sample points | 888 |
+| LV03/LV95 step | 10,000 m |
+| LV03/LV95 max east residual | 0.000000 m |
+| LV03/LV95 max north residual | 0.000000 m |
+| LV95/WGS84/LV95 max east residual | 148.254882 m |
+| LV95/WGS84/LV95 max north residual | 7.482338 m |
+| LV95/WGS84/LV95 max horizontal residual | 148.443577 m |
+| Absolute accuracy against reference points | not measured |
+
+The LV95/WGS84 values are round-trip residuals between the two implemented
+polynomial formulas, using the static inverse's observed arcsecond convention.
+They are not absolute projection error bounds. See [How this was measured](docs/measurement.md).
+
+## Repository layout
+
+```text
+src/main/java/ch/bissbert/swisstowgs4j/
+  Coordinate.java   shared conversion interface
+  LV03.java         CH1903 coordinate value
+  LV95.java         CH1903+ coordinate value
+  WGS84.java        geographic coordinate value
+  Transformer.java  offset and polynomial transformations
+docs/               subsystem write-ups and measurement contract
+tools/              measurement probe and standard-library runner
+pom.xml             Maven coordinates and Java 11 compiler target
+```
+
+## Known limitations
+
+- `WGS84.toLV95()` reads index `3` from a three-element array and throws before
+  returning. `WGS84.toLV03()` fails because it delegates to that method.
+- `Transformer.wgs84ToLV95()` does not normalize the public decimal-degree
+  values. Its current formula behaves as if latitude arcseconds are the first
+  argument and longitude arcseconds are the second. The parameter Javadoc does
+  not state this convention.
+- The LV95/WGS84 formulas are approximations. Absolute accuracy against known
+  reference points is not measured in this repository.
+- The inverse residual table is not an accuracy guarantee. It only compares the
+  two formulas over the sample run described in `docs/measurement.md`.
+- `LV03` constructors take `north, east`, while `LV95` constructors take
+  `east, north`. The static transformer methods use `east, north` for both
+  Swiss systems.
+- The project has no configured remote Maven repository. Consumers need an
+  externally published artifact or a local `mvn install`.
+
+More detail and the unapplied bug diffs are in [`docs/`](docs/README.md).
