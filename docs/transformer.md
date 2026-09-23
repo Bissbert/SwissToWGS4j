@@ -58,31 +58,27 @@ LV95 -> WGS84: lon=7.438637222 lat=46.951081111 height=null
 
 ## WGS84 to LV95
 
-The public object path is currently broken before it can return a value; see
-[Bugs found](BUGS-FOUND.md). The static method does return a result, but its
-current arithmetic uses inputs at arcsecond scale and effectively expects
-latitude arcseconds in the first argument and longitude arcseconds in the
-second. That convention is inferred from the source and verified by the
-measurement probe; it is not stated by the current Javadoc.
+At the time of this pass the public object path threw
+`ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3` before it
+could return a value, and the static method consumed its public decimal-degree
+arguments as if they were latitude arcseconds first and longitude arcseconds
+second. Both are recorded in [Bugs found](BUGS-FOUND.md) and have since been
+fixed on the default branch.
 
-For the sample WGS84 point, the current static call is equivalent to:
+The call takes decimal degrees in the declared `(longitude, latitude, height)`
+order:
 
 ```java
-Double[] lv95 = Transformer.wgs84ToLV95(
-        46.951082 * 3600.0,
-        7.438632 * 3600.0,
-        null);
+Double[] lv95 = Transformer.wgs84ToLV95(7.438632, 46.951082, null);
 ```
 
 The measured result is:
 
 ```text
-direct lat/lon arcseconds: E=2599999.9488 N=1199999.9296
+E=2599999.9488 N=1199999.9296
 ```
 
-The current `WGS84.toLV95()` call instead reports
-`ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3`, even
-though the static method allocated three result slots.
+`new WGS84(7.438632, 46.951082).toLV95()` now returns the same pair.
 
 ## Accuracy boundary
 
@@ -90,5 +86,4 @@ The two polynomial directions are approximations. The repository contains no
 known reference-point test against an authoritative WGS84/LV95 data source,
 so absolute accuracy is **not measured**. The `10,000` m grid result in the
 [measurement report](measurement.md) is only the residual after passing values
-through the two implemented polynomial formulas with the static method's
-current effective convention.
+through the two implemented polynomial formulas.

@@ -15,7 +15,7 @@ flowchart LR
 
     A -->|"+2,000,000 east<br/>+1,000,000 north"| B
     B -->|"forward polynomial<br/>approximation"| C
-    C -.->|"inverse static formula<br/>object path currently fails"| B
+    C -->|"inverse polynomial<br/>approximation"| B
     B -->|"−2,000,000 east<br/>−1,000,000 north"| A
 
     style A fill:#9e6a03,stroke:#d29922,color:#fff
@@ -61,29 +61,27 @@ Verified output:
 lon=7.438637222 lat=46.951081111
 ```
 
-The inverse object conversion is currently broken and is documented below. The
-static method can be exercised with the input convention its current formula
-actually uses: latitude arcseconds first, longitude arcseconds second.
+The inverse direction works the same way, in decimal degrees and in
+longitude-then-latitude order:
 
 ```java
-import ch.bissbert.swisstowgs4j.Transformer;
+import ch.bissbert.swisstowgs4j.LV95;
+import ch.bissbert.swisstowgs4j.WGS84;
 
-Double[] lv95 = Transformer.wgs84ToLV95(
-        46.951082 * 3600.0,
-        7.438632 * 3600.0,
-        null);
-System.out.printf("east=%.4f north=%.4f%n", lv95[0], lv95[1]);
+LV95 swiss = new WGS84(7.438632, 46.951082).toLV95();
+System.out.printf("east=%.4f north=%.4f%n", swiss.getEast(), swiss.getNorth());
 ```
 
-Verified output from the current static implementation:
+Verified output:
 
 ```text
 east=2599999.9488 north=1199999.9296
 ```
 
-Calling `new WGS84(7.438632, 46.951082).toLV95()` instead throws
-`ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3`. This is
-not hidden or repaired in the documentation pass; see [Bugs found](docs/BUGS-FOUND.md).
+`Transformer.wgs84ToLV95(7.438632, 46.951082, null)` returns the same pair.
+Both the object path and the static path were broken at the time of the
+documentation pass and have since been repaired on the default branch; see
+[Bugs found](docs/BUGS-FOUND.md) for what changed.
 
 ## Architecture
 
@@ -158,12 +156,6 @@ pom.xml             Maven coordinates and Java 11 compiler target
 
 ## Known limitations
 
-- `WGS84.toLV95()` reads index `3` from a three-element array and throws before
-  returning. `WGS84.toLV03()` fails because it delegates to that method.
-- `Transformer.wgs84ToLV95()` does not normalize the public decimal-degree
-  values. Its current formula behaves as if latitude arcseconds are the first
-  argument and longitude arcseconds are the second. The parameter Javadoc does
-  not state this convention.
 - The LV95/WGS84 formulas are approximations. Absolute accuracy against known
   reference points is not measured in this repository.
 - The inverse residual table is not an accuracy guarantee. It only compares the
@@ -174,4 +166,10 @@ pom.xml             Maven coordinates and Java 11 compiler target
 - The project has no configured remote Maven repository. Consumers need an
   externally published artifact or a local `mvn install`.
 
-More detail and the unapplied bug diffs are in [`docs/`](docs/README.md).
+Three further problems recorded during the documentation pass have since been
+fixed on the default branch: `WGS84.toLV95()` read index `3` of a three-element
+array and threw before returning (taking `WGS84.toLV03()` with it), the inverse
+polynomial consumed its public decimal-degree arguments as if they were
+arcseconds in the opposite order, and the inverse method's Javadoc did not state
+its angular unit. More detail, including the recorded reproductions, is in
+[`docs/`](docs/README.md).

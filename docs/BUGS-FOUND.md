@@ -1,16 +1,26 @@
 [← back to the overview](../README.md)
 
-# Bugs found (not fixed)
+# Bugs found
 
 This pass did not change tracked source code. The entries below record the
-problems found in the current implementation and the fixes that would be
+problems found in the implementation as it stood, and the fixes that were
 considered separately.
+
+> **Since this pass:** an independent adjudication confirmed all three entries,
+> and a subsequent fix pass applied all three to the default branch: entry 1 in
+> commit `e532cde`, entry 2 in commit `b7b4bd9` and entry 3 in commit `078e378`.
+> `wgs84ToLV95` now scales latitude into the polynomial's `x` term and longitude
+> into its `y` term while keeping the public `(longitude, latitude, height)`
+> argument order in decimal degrees, `WGS84.toLV95()` checks index `2` of the
+> three-element result, and the inverse method's Javadoc states its angular
+> unit. Read the reproductions, the diagram and the example diffs below as the
+> state at the time of the pass, not as the current state of the default branch.
 
 ```mermaid
 flowchart LR
     A["WGS84 input"] --> B["WGS84.toLV95()"]
     B --> C{"array index 3"}
-    C -->|"current code"| D["ArrayIndexOutOfBoundsException"]
+    C -->|"code at the time of the pass"| D["ArrayIndexOutOfBoundsException"]
     A --> E["Transformer.wgs84ToLV95()"]
     E --> F["decimal degrees interpreted by<br/>arcsecond-scale coefficients"]
     F --> G["large coordinate error"]

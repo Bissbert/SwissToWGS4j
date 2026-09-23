@@ -50,7 +50,10 @@ polynomials themselves. `LV03.toWGS84()` first shifts to LV95, then calls the
 LV95-to-WGS84 transform. `WGS84.toLV03()` first calls `toLV95()` and then the
 constant LV95-to-LV03 shift.
 
-The current `WGS84.toLV95()` path is not usable: it reads array index `3` from
-a three-element result and throws `ArrayIndexOutOfBoundsException`. The
-inverse static method also has an angular-unit/order mismatch. Both problems
-are documented in [Bugs found](BUGS-FOUND.md), not fixed here.
+At the time of this pass the `WGS84.toLV95()` path was not usable: it read
+array index `3` from a three-element result and threw
+`ArrayIndexOutOfBoundsException`, and the inverse static method had an
+angular-unit/order mismatch. Both problems are documented in
+[Bugs found](BUGS-FOUND.md) and have since been fixed on the default branch, so
+the object path now returns a value and the static method takes decimal degrees
+in longitude-then-latitude order.
