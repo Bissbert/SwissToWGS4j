@@ -22,6 +22,12 @@ java -version 2>&1 | head -1
 mvn -v 2>/dev/null | head -1
 python3 --version
 
+section "mvn -B -Dgpg.skip=true test"
+mvn -B -Dgpg.skip=true test >/tmp/mvn-test.log 2>&1
+echo "exit=$?"
+grep -E "Tests run: [0-9]+, .* -- in " /tmp/mvn-test.log | sed "s/, Time elapsed.* -- in ch.bissbert.swisstowgs4j./  /; s/^\[INFO\] //"
+grep -E "^\[(INFO|ERROR)\] Tests run:" /tmp/mvn-test.log | tail -1 | sed "s/^\[[A-Z]*\] //"
+
 section "mvn -q -Dgpg.skip=true package"
 mvn -q -B -Dgpg.skip=true package >/tmp/mvn.log 2>&1
 echo "exit=$?"
