@@ -52,6 +52,5 @@ constant LV95-to-LV03 shift.
 
 `WGS84.toLV95()` returns a value and the static inverse takes decimal degrees
 in longitude-then-latitude order (fixed in `b7b4bd9` and `e532cde`).
-`LV95.toLV03()` builds its result with north and east swapped, and
-`WGS84.toLV03()` inherits that; this is open entry 4 in
-[Bugs found](BUGS-FOUND.md).
+`LV95.toLV03()` and `WGS84.toLV03()` return north and east in the right
+fields (fixed in [`c929f7e`](https://github.com/Bissbert/SwissToWGS4j/commit/c929f7e), [#5](https://github.com/Bissbert/SwissToWGS4j/issues/5)).

@@ -21,7 +21,7 @@ public class Transformer {
                 + (4.728982 * y)
                 + (0.791484 * y * x)
                 + (0.1306 * y * Math.pow(x, 2))
-                - (0.0436 * Math.pow(x, 3));
+                - (0.0436 * Math.pow(y, 3));
 
         double latitudeM = 16.9023892
                 + (3.238272 * x)

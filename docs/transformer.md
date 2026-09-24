@@ -77,10 +77,22 @@ E=2599999.9488 N=1199999.9296
 
 ## Accuracy boundary
 
-The two polynomial directions are approximations. The repository contains no
-known reference-point test against an authoritative WGS84/LV95 data source,
-so absolute accuracy is not covered. The forward longitude polynomial also has
-a wrong cubic term (open entry 5 in [Bugs found](BUGS-FOUND.md)), which is why
-the round trip reaches 148 m away from Bern. The `10,000` m grid result in the
-[measurement report](measurement.md) is only the residual after passing values
-through the two implemented polynomial formulas.
+The two polynomial directions are approximations. `ReferencePointsTest`
+compares them with swisstopo's REFRAME service, which applies the rigorous
+transformation:
+
+| Direction | Points | Largest distance to REFRAME |
+|---|---|---:|
+| LV95 → WGS84 | 5 in Switzerland (Bern, Zurich, Chur, near Geneva, near Lugano) | 2.0 m |
+| LV95 → WGS84 | 4 grid corners outside Switzerland | 4.3 m |
+| WGS84 → LV95 | 5 (Bern, Zurich, near Lugano, two grid corners) | 1.0 m |
+
+The LV95 → WGS84 → LV95 round trip over the `10,000` m grid in the
+[measurement report](measurement.md) stays below 4.72 m. Before
+[#6](https://github.com/Bissbert/SwissToWGS4j/issues/6) was fixed, the forward longitude
+polynomial used `x³` instead of `y³` and the round trip reached 148 m.
+
+REFRAME's LV95 → LV03 also applies the FINELTRA distortion model, so away from
+Bern it differs from the constant offset used here (by about 1 m at
+E 2,700,000 / N 1,100,000). The offset is the one swisstopo gives for the
+approximate formulas.
