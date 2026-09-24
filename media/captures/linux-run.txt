@@ -1,0 +1,49 @@
+
+=== environment
+Linux 6.5.11-linuxkit aarch64
+openjdk version "11.0.32" 2026-07-21
+Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)
+Python 3.12.3
+
+=== mvn -q -Dgpg.skip=true package
+exit=0
+  target/SwissToWGS4j-1.0.jar
+  target/SwissToWGS4j-1.0-javadoc.jar
+  target/SwissToWGS4j-1.0-sources.jar
+
+=== mvn -q -Dgpg.skip=true install
+exit=0
+  ~/.m2/repository/ch/bissbert/SwissToWGS4j/1.0/SwissToWGS4j-1.0.jar
+  ~/.m2/repository/ch/bissbert/SwissToWGS4j/1.0/SwissToWGS4j-1.0-javadoc.jar
+  ~/.m2/repository/ch/bissbert/SwissToWGS4j/1.0/SwissToWGS4j-1.0-sources.jar
+
+=== python3 tools/measure.py
+compiler.warning_count=0
+quickstart:
+LV95 -> WGS84: lon=7.438637222 lat=46.951081111 height=null
+WGS84 -> LV95: E=2599999.9488 N=1199999.9296 height=null
+inverse:
+static wgs84ToLV95, decimal degrees: E=2599999.9488 N=1199999.9296 h=null
+WGS84.toLV95, no height -> LV95[E=2599999.9488 N=1199999.9296 h=null]
+WGS84.toLV03, no height -> LV03[north=599999.9488 east=199999.9296 h=null]
+roundtrip:
+roundtrip.step_m=10000
+roundtrip.points=888
+roundtrip.max_abs_east_m=148.254882
+roundtrip.max_abs_north_m=7.482338
+roundtrip.max_horizontal_m=148.443577
+roundtrip.path=static methods, decimal degrees
+shift:
+shift.step_m=10000
+shift.points=888
+shift.max_abs_east_m=0.000000
+shift.max_abs_north_m=0.000000
+shift.height_exact=true
+api:
+LV95.toWGS84 -> WGS84[lon=7.438637222 lat=46.951081111 h=589.55]
+LV95.toLV03 -> LV03[north=600000.0000 east=200000.0000 h=540.0]
+LV03.toLV95 -> LV95[E=2600000.0000 N=1200000.0000 h=540.0]
+LV03.toWGS84 -> WGS84[lon=7.438637222 lat=46.951081111 h=589.55]
+WGS84.toLV95 -> LV95[E=2599999.9488 N=1199999.9296 h=490.44575825839996]
+WGS84.toLV03 -> LV03[north=599999.9488 east=199999.9296 h=490.44575825839996]
+absolute_accuracy=not measured

@@ -32,7 +32,7 @@ not configure a remote artifact repository, install the library locally first:
 mvn -q -Dgpg.skip=true install
 ```
 
-The command above was run successfully for this documentation pass. A consumer
+This runs in the Linux container used for the [measurements](docs/measurement.md). A consumer
 project can then declare the coordinates from this repository:
 
 ```xml
@@ -79,9 +79,8 @@ east=2599999.9488 north=1199999.9296
 ```
 
 `Transformer.wgs84ToLV95(7.438632, 46.951082, null)` returns the same pair.
-Both the object path and the static path were broken at the time of the
-documentation pass and have since been repaired on the default branch; see
-[Bugs found](docs/BUGS-FOUND.md) for what changed.
+Both paths were fixed in `e532cde` and `b7b4bd9`; see
+[Bugs found](docs/BUGS-FOUND.md).
 
 ## Architecture
 
@@ -111,18 +110,19 @@ flowchart TD
 | Starting type | Same type | LV03 | LV95 | WGS84 |
 |---|---|---|---|---|
 | `LV03` | returns itself | — | fixed offset | offset, then forward polynomial |
-| `LV95` | returns itself | fixed offset | — | forward polynomial |
-| `WGS84` | returns itself | currently throws via `toLV95()` | currently throws | — |
+| `LV95` | returns itself | fixed offset (north and east swapped, [bug 4](docs/BUGS-FOUND.md)) | — | forward polynomial |
+| `WGS84` | returns itself | via `toLV95()` (north and east swapped, [bug 4](docs/BUGS-FOUND.md)) | inverse polynomial | — |
 | `Transformer` | — | static offset methods | static offset and<br/>inverse methods | static polynomial methods |
 
 Heights are optional. The LV03/LV95 offset preserves a non-null height. The
 LV95/WGS84 methods apply the vertical terms in their formulas. No validation of
 coordinate ranges is performed.
 
-## Measured results
+## Results
 
-The figures below come from `python3 tools/measure.py`, which compiles the
-current source with `javac -Xlint:all` and runs `tools/Probe.java`.
+The figures below come from `python3 tools/measure.py`, run in a Linux container
+by `tools/linux-run.sh`. It compiles the source with `javac -Xlint:all` and runs
+`tools/Probe.java`.
 
 | Check | Result |
 |---|---:|
@@ -134,11 +134,13 @@ current source with `javac -Xlint:all` and runs `tools/Probe.java`.
 | LV95/WGS84/LV95 max east residual | 148.254882 m |
 | LV95/WGS84/LV95 max north residual | 7.482338 m |
 | LV95/WGS84/LV95 max horizontal residual | 148.443577 m |
-| Absolute accuracy against reference points | not measured |
+| Absolute accuracy against reference points | not covered |
 
 The LV95/WGS84 values are round-trip residuals between the two implemented
-polynomial formulas, using the static inverse's observed arcsecond convention.
-They are not absolute projection error bounds. See [How this was measured](docs/measurement.md).
+polynomial formulas, in decimal degrees. They are not absolute error bounds.
+Most of the 148 m comes from open [bug 5](docs/BUGS-FOUND.md): the forward
+longitude polynomial uses `x³` where it needs `y³`. See
+[How this was measured](docs/measurement.md).
 
 ## Repository layout
 
@@ -150,26 +152,23 @@ src/main/java/ch/bissbert/swisstowgs4j/
   WGS84.java        geographic coordinate value
   Transformer.java  offset and polynomial transformations
 docs/               subsystem write-ups and measurement contract
-tools/              measurement probe and standard-library runner
+tools/              measurement probe, runner and the Linux container run
 pom.xml             Maven coordinates and Java 11 compiler target
 ```
 
 ## Known limitations
 
 - The LV95/WGS84 formulas are approximations. Absolute accuracy against known
-  reference points is not measured in this repository.
-- The inverse residual table is not an accuracy guarantee. It only compares the
-  two formulas over the sample run described in `docs/measurement.md`.
+  reference points is not covered in this repository.
+- The round-trip residual table is not an accuracy guarantee. It only compares
+  the two formulas over the sample run described in `docs/measurement.md`.
 - `LV03` constructors take `north, east`, while `LV95` constructors take
   `east, north`. The static transformer methods use `east, north` for both
   Swiss systems.
 - The project has no configured remote Maven repository. Consumers need an
   externally published artifact or a local `mvn install`.
 
-Three further problems recorded during the documentation pass have since been
-fixed on the default branch: `WGS84.toLV95()` read index `3` of a three-element
-array and threw before returning (taking `WGS84.toLV03()` with it), the inverse
-polynomial consumed its public decimal-degree arguments as if they were
-arcseconds in the opposite order, and the inverse method's Javadoc did not state
-its angular unit. More detail, including the recorded reproductions, is in
-[`docs/`](docs/README.md).
+Open bugs: `LV95.toLV03()` and `WGS84.toLV03()` swap north and east, and the
+forward polynomial has a wrong longitude term that grows to about 148 m
+round-trip error away from Bern. Three earlier bugs in the inverse direction
+are fixed. Details are in [Bugs found](docs/BUGS-FOUND.md).
