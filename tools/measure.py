@@ -53,7 +53,7 @@ def main():
     print(java("shift", "10000"))
     print("api:")
     print(java("api"))
-    print("absolute_accuracy=not measured")
+    print("absolute_accuracy=see mvn test (swisstopo REFRAME reference points)")
 
 
 if __name__ == "__main__":
