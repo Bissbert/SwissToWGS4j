@@ -89,7 +89,7 @@ transformation:
 
 The LV95 → WGS84 → LV95 round trip over the `10,000` m grid in the
 [measurement report](measurement.md) stays below 4.72 m. Before
-entry 5 in [Bugs found](BUGS-FOUND.md) was fixed, the forward longitude
+[#6](https://github.com/Bissbert/SwissToWGS4j/issues/6) was fixed, the forward longitude
 polynomial used `x³` instead of `y³` and the round trip reached 148 m.
 
 REFRAME's LV95 → LV03 also applies the FINELTRA distortion model, so away from

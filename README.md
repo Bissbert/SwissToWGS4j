@@ -79,8 +79,7 @@ east=2599999.9488 north=1199999.9296
 ```
 
 `Transformer.wgs84ToLV95(7.438632, 46.951082, null)` returns the same pair.
-Both paths were fixed in `e532cde` and `b7b4bd9`; see
-[Bugs found](docs/BUGS-FOUND.md).
+Both paths were fixed in `e532cde` and `b7b4bd9`.
 
 ## Architecture
 
@@ -182,5 +181,4 @@ pom.xml             Maven coordinates and Java 11 compiler target
 - The project has no configured remote Maven repository. Consumers need an
   externally published artifact or a local `mvn install`.
 
-Five bugs were found and fixed, each with a commit and, for the last two, a
-regression test. Details are in [Bugs found](docs/BUGS-FOUND.md).
+Bugs are tracked as [GitHub issues](https://github.com/Bissbert/SwissToWGS4j/issues?q=label%3Abug).

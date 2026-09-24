@@ -65,8 +65,8 @@ constants, so the suite runs offline. Measured distances to REFRAME:
 | WGS84 → LV95 | Bern, Zurich, near Lugano, two grid corners | 1.0 m |
 
 The test tolerances are these values rounded up (2.5 m, 5 m, 1.5 m). With
-either fix from [Bugs found](BUGS-FOUND.md) reverted, the suite fails: 9
-failures without the `y³` fix (entry 5), 4 without the axis fix (entry 4).
+either fix reverted, the suite fails: 9 failures without the `y³` fix
+([#6](https://github.com/Bissbert/SwissToWGS4j/issues/6)), 4 without the axis fix ([#5](https://github.com/Bissbert/SwissToWGS4j/issues/5)).
 
 ## Build
 
@@ -119,19 +119,18 @@ absolute_accuracy=see mvn test (swisstopo REFRAME reference points)
 - **Compiler:** no warnings under `-Xlint:all`.
 - **Inverse direction:** the static method and the object path both return
   `E=2599999.9488 N=1199999.9296` for a point in Bern. A missing height stays
-  `null`. These are the fixes for entries 1 and 2 in
-  [Bugs found](BUGS-FOUND.md).
+  `null` (fixed in `e532cde` and `b7b4bd9`).
 - **LV03/LV95 shift:** 888 grid points at a `10,000` m step, converted there and
   back with a height of `500.0`. The horizontal residual is `0.000000` m and the
   height comes back unchanged.
 - **LV95/WGS84 round trip:** the same grid in LV95 metres, converted to WGS84
   and back with the static methods in decimal degrees. The largest residual is
   4.72 m, at the grid corner E 2,480,000 / N 1,300,000 outside Switzerland; it
-  was 148.44 m before the `y³` fix (entry 5). The residual compares the two
+  was 148.44 m before the `y³` fix ([#6](https://github.com/Bissbert/SwissToWGS4j/issues/6)). The residual compares the two
   implemented formulas with each other; the REFRAME comparison above is the
   absolute check.
 - **`api:` block:** `LV95.toLV03` and `WGS84.toLV03` report north and east in
-  the right fields (entry 4).
+  the right fields ([#5](https://github.com/Bissbert/SwissToWGS4j/issues/5)).
 
 ## Not covered
 
