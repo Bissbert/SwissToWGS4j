@@ -48,9 +48,9 @@ public class LV95 implements Coordinate {
     public LV03 toLV03() {
         Double[] lv03data = Transformer.lv95ToLV03(east, north, height);
         if (lv03data[2] == null) {
-            return new LV03(lv03data[0], lv03data[1]);
+            return new LV03(lv03data[1], lv03data[0]);
         }
-        return new LV03(lv03data[0], lv03data[1], lv03data[2]);
+        return new LV03(lv03data[1], lv03data[0], lv03data[2]);
     }
 
     @Override

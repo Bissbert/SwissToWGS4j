@@ -45,13 +45,15 @@ def main():
     print("compiler.warning_count=" + str(compiler_warning_count(compile_result.stderr)))
     print("quickstart:")
     print(java("quickstart"))
-    print("bugs:")
-    print(java("bugs"))
+    print("inverse:")
+    print(java("inverse"))
     print("roundtrip:")
     print(java("roundtrip", "10000"))
     print("shift:")
     print(java("shift", "10000"))
-    print("absolute_accuracy=not measured")
+    print("api:")
+    print(java("api"))
+    print("absolute_accuracy=see mvn test (swisstopo REFRAME reference points)")
 
 
 if __name__ == "__main__":

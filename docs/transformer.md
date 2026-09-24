@@ -10,7 +10,7 @@ between LV95 and WGS84.
 flowchart LR
     A["LV03<br/>east, north"] -->|"+2,000,000 E<br/>+1,000,000 N"| B["LV95"]
     B -->|"normalise x/y<br/>then polynomial"| C["WGS84<br/>longitude, latitude"]
-    C -->|"current implementation:<br/>raw inverse arithmetic"| B
+    C -->|"degrees to arcseconds<br/>then polynomial"| B
     B -->|"−2,000,000 E<br/>−1,000,000 N"| A
 
     style A fill:#9e6a03,stroke:#d29922,color:#fff
@@ -58,21 +58,16 @@ LV95 -> WGS84: lon=7.438637222 lat=46.951081111 height=null
 
 ## WGS84 to LV95
 
-At the time of this pass the public object path threw
-`ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3` before it
-could return a value, and the static method consumed its public decimal-degree
-arguments as if they were latitude arcseconds first and longitude arcseconds
-second. Both are recorded in [Bugs found](BUGS-FOUND.md) and have since been
-fixed on the default branch.
-
-The call takes decimal degrees in the declared `(longitude, latitude, height)`
+The inverse method converts both angles to arcseconds, builds `x` from
+latitude and `y` from longitude, and evaluates the inverse polynomials. The
+call takes decimal degrees in the declared `(longitude, latitude, height)`
 order:
 
 ```java
 Double[] lv95 = Transformer.wgs84ToLV95(7.438632, 46.951082, null);
 ```
 
-The measured result is:
+The result is:
 
 ```text
 E=2599999.9488 N=1199999.9296
@@ -82,8 +77,22 @@ E=2599999.9488 N=1199999.9296
 
 ## Accuracy boundary
 
-The two polynomial directions are approximations. The repository contains no
-known reference-point test against an authoritative WGS84/LV95 data source,
-so absolute accuracy is **not measured**. The `10,000` m grid result in the
-[measurement report](measurement.md) is only the residual after passing values
-through the two implemented polynomial formulas.
+The two polynomial directions are approximations. `ReferencePointsTest`
+compares them with swisstopo's REFRAME service, which applies the rigorous
+transformation:
+
+| Direction | Points | Largest distance to REFRAME |
+|---|---|---:|
+| LV95 → WGS84 | 5 in Switzerland (Bern, Zurich, Chur, near Geneva, near Lugano) | 2.0 m |
+| LV95 → WGS84 | 4 grid corners outside Switzerland | 4.3 m |
+| WGS84 → LV95 | 5 (Bern, Zurich, near Lugano, two grid corners) | 1.0 m |
+
+The LV95 → WGS84 → LV95 round trip over the `10,000` m grid in the
+[measurement report](measurement.md) stays below 4.72 m. Before
+[#6](https://github.com/Bissbert/SwissToWGS4j/issues/6) was fixed, the forward longitude
+polynomial used `x³` instead of `y³` and the round trip reached 148 m.
+
+REFRAME's LV95 → LV03 also applies the FINELTRA distortion model, so away from
+Bern it differs from the constant offset used here (by about 1 m at
+E 2,700,000 / N 1,100,000). The offset is the one swisstopo gives for the
+approximate formulas.

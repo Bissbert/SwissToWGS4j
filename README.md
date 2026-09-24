@@ -32,7 +32,7 @@ not configure a remote artifact repository, install the library locally first:
 mvn -q -Dgpg.skip=true install
 ```
 
-The command above was run successfully for this documentation pass. A consumer
+This runs in the Linux container used for the [measurements](docs/measurement.md). A consumer
 project can then declare the coordinates from this repository:
 
 ```xml
@@ -79,9 +79,7 @@ east=2599999.9488 north=1199999.9296
 ```
 
 `Transformer.wgs84ToLV95(7.438632, 46.951082, null)` returns the same pair.
-Both the object path and the static path were broken at the time of the
-documentation pass and have since been repaired on the default branch; see
-[Bugs found](docs/BUGS-FOUND.md) for what changed.
+Both paths were fixed in `e532cde` and `b7b4bd9`.
 
 ## Architecture
 
@@ -112,17 +110,18 @@ flowchart TD
 |---|---|---|---|---|
 | `LV03` | returns itself | — | fixed offset | offset, then forward polynomial |
 | `LV95` | returns itself | fixed offset | — | forward polynomial |
-| `WGS84` | returns itself | currently throws via `toLV95()` | currently throws | — |
+| `WGS84` | returns itself | via `toLV95()` | inverse polynomial | — |
 | `Transformer` | — | static offset methods | static offset and<br/>inverse methods | static polynomial methods |
 
 Heights are optional. The LV03/LV95 offset preserves a non-null height. The
 LV95/WGS84 methods apply the vertical terms in their formulas. No validation of
 coordinate ranges is performed.
 
-## Measured results
+## Results
 
-The figures below come from `python3 tools/measure.py`, which compiles the
-current source with `javac -Xlint:all` and runs `tools/Probe.java`.
+The figures below come from `tools/linux-run.sh`, which runs the JUnit suite and
+`python3 tools/measure.py` in a Linux container. The probe compiles the source
+with `javac -Xlint:all` and runs `tools/Probe.java`.
 
 | Check | Result |
 |---|---:|
@@ -131,14 +130,29 @@ current source with `javac -Xlint:all` and runs `tools/Probe.java`.
 | LV03/LV95 step | 10,000 m |
 | LV03/LV95 max east residual | 0.000000 m |
 | LV03/LV95 max north residual | 0.000000 m |
-| LV95/WGS84/LV95 max east residual | 148.254882 m |
-| LV95/WGS84/LV95 max north residual | 7.482338 m |
-| LV95/WGS84/LV95 max horizontal residual | 148.443577 m |
-| Absolute accuracy against reference points | not measured |
+| LV95/WGS84/LV95 max east residual | 3.752119 m |
+| LV95/WGS84/LV95 max north residual | 3.016353 m |
+| LV95/WGS84/LV95 max horizontal residual | 4.721508 m |
+| LV95 → WGS84 vs REFRAME, 5 points in Switzerland | ≤ 2.0 m |
+| LV95 → WGS84 vs REFRAME, 4 grid corners abroad | ≤ 4.3 m |
+| WGS84 → LV95 vs REFRAME, 5 points | ≤ 1.0 m |
+| JUnit tests | 28 run, 0 failures |
 
-The LV95/WGS84 values are round-trip residuals between the two implemented
-polynomial formulas, using the static inverse's observed arcsecond convention.
-They are not absolute projection error bounds. See [How this was measured](docs/measurement.md).
+The round-trip residuals compare the two implemented polynomial formulas with
+each other; the largest is at a grid corner outside Switzerland. The REFRAME
+rows compare each direction with swisstopo's rigorous transformation. See
+[How this was measured](docs/measurement.md).
+
+## Tests
+
+```sh
+mvn -Dgpg.skip=true test   # needs a JDK 11+
+sh tools/test.sh           # the same in a Linux container
+```
+
+The suite checks both polynomial directions against swisstopo REFRAME
+reference points, the LV95/LV03 axis order, the round trip over the Swiss
+grid, the height terms and same-system conversions.
 
 ## Repository layout
 
@@ -149,27 +163,22 @@ src/main/java/ch/bissbert/swisstowgs4j/
   LV95.java         CH1903+ coordinate value
   WGS84.java        geographic coordinate value
   Transformer.java  offset and polynomial transformations
+src/test/java/...   JUnit suite
 docs/               subsystem write-ups and measurement contract
-tools/              measurement probe and standard-library runner
+tools/              measurement probe, test and Linux container runners
 pom.xml             Maven coordinates and Java 11 compiler target
 ```
 
 ## Known limitations
 
-- The LV95/WGS84 formulas are approximations. Absolute accuracy against known
-  reference points is not measured in this repository.
-- The inverse residual table is not an accuracy guarantee. It only compares the
-  two formulas over the sample run described in `docs/measurement.md`.
+- The LV95/WGS84 formulas are approximations: up to 2.0 m from swisstopo's
+  REFRAME result in Switzerland and 4.3 m at the grid corners abroad.
+- LV03/LV95 use the constant offset. swisstopo's rigorous LV03 conversion
+  (FINELTRA) differs from it by up to about a metre away from Bern.
 - `LV03` constructors take `north, east`, while `LV95` constructors take
   `east, north`. The static transformer methods use `east, north` for both
   Swiss systems.
 - The project has no configured remote Maven repository. Consumers need an
   externally published artifact or a local `mvn install`.
 
-Three further problems recorded during the documentation pass have since been
-fixed on the default branch: `WGS84.toLV95()` read index `3` of a three-element
-array and threw before returning (taking `WGS84.toLV03()` with it), the inverse
-polynomial consumed its public decimal-degree arguments as if they were
-arcseconds in the opposite order, and the inverse method's Javadoc did not state
-its angular unit. More detail, including the recorded reproductions, is in
-[`docs/`](docs/README.md).
+Bugs are tracked as [GitHub issues](https://github.com/Bissbert/SwissToWGS4j/issues?q=label%3Abug).

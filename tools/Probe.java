@@ -29,8 +29,8 @@ public final class Probe {
             case "quickstart":
                 quickstart();
                 break;
-            case "bugs":
-                bugs();
+            case "inverse":
+                inverse();
                 break;
             case "roundtrip":
                 roundtrip(Double.parseDouble(args[1]));
@@ -54,32 +54,25 @@ public final class Probe {
                 wgs84.getLongitude(), wgs84.getLatitude(), wgs84.getHeight());
 
         try {
-            new WGS84(7.438632, 46.951082).toLV95();
-            System.out.println("WGS84 -> LV95: returned normally");
+            LV95 back = new WGS84(7.438632, 46.951082).toLV95();
+            System.out.printf(Locale.ROOT,
+                    "WGS84 -> LV95: E=%.4f N=%.4f height=%s%n",
+                    back.getEast(), back.getNorth(), back.getHeight());
         } catch (Throwable exception) {
             System.out.println("WGS84 -> LV95: !! " + exception);
         }
     }
 
-    static void bugs() {
+    /** The inverse paths that failed before e532cde and b7b4bd9. */
+    static void inverse() {
         double longitude = 7.438632;
         double latitude = 46.951082;
         Double[] decimal = Transformer.wgs84ToLV95(longitude, latitude, null);
-        Double[] seconds = Transformer.wgs84ToLV95(
-                latitude * 3600.0, longitude * 3600.0, null);
-
         System.out.printf(Locale.ROOT,
-                "direct decimal degrees: E=%.4f N=%.4f%n",
-                decimal[0], decimal[1]);
-        System.out.printf(Locale.ROOT,
-                "direct lat/lon arcseconds: E=%.4f N=%.4f%n",
-                seconds[0], seconds[1]);
-        try {
-            new WGS84(longitude, latitude).toLV95();
-            System.out.println("object conversion: returned normally");
-        } catch (Throwable exception) {
-            System.out.println("object conversion: !! " + exception);
-        }
+                "static wgs84ToLV95, decimal degrees: E=%.4f N=%.4f h=%s%n",
+                decimal[0], decimal[1], decimal[2]);
+        line("WGS84.toLV95, no height", () -> format(new WGS84(longitude, latitude).toLV95()));
+        line("WGS84.toLV03, no height", () -> format(new WGS84(longitude, latitude).toLV03()));
     }
 
     static void roundtrip(double step) {
@@ -91,8 +84,7 @@ public final class Probe {
         for (double east = E_MIN; east <= E_MAX; east += step) {
             for (double north = N_MIN; north <= N_MAX; north += step) {
                 Double[] wgs84 = Transformer.lv95ToWGS84(east, north, null);
-                Double[] back = Transformer.wgs84ToLV95(
-                        wgs84[1] * 3600.0, wgs84[0] * 3600.0, null);
+                Double[] back = Transformer.wgs84ToLV95(wgs84[0], wgs84[1], null);
                 double eastError = Math.abs(back[0] - east);
                 double northError = Math.abs(back[1] - north);
                 double horizontalError = Math.hypot(eastError, northError);
@@ -108,7 +100,7 @@ public final class Probe {
         System.out.printf(Locale.ROOT, "roundtrip.max_abs_east_m=%.6f%n", maxEast);
         System.out.printf(Locale.ROOT, "roundtrip.max_abs_north_m=%.6f%n", maxNorth);
         System.out.printf(Locale.ROOT, "roundtrip.max_horizontal_m=%.6f%n", maxHorizontal);
-        System.out.println("roundtrip.path=static methods with lat/lon arcseconds");
+        System.out.println("roundtrip.path=static methods, decimal degrees");
     }
 
     static void shift(double step) {
